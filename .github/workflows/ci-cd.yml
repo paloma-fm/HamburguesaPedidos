@@ -1,0 +1,270 @@
+name: CI/CD Pipeline - Hamburgueseria Pedidos
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: write
+
+env:
+  JAVA_VERSION: '21'
+  MAVEN_OPTS: '-Xmx1024m'
+
+jobs:
+  # ============================================================
+  # JOB 1: BUILD - Compilación del proyecto
+  # ============================================================
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Compilar con Maven (sin pruebas)
+        run: mvn clean package -DskipTests --no-transfer-progress
+
+      - name: Guardar artefacto JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: jar-artifact
+          path: target/*.jar
+          retention-days: 1
+
+  # ============================================================
+  # JOB 2: TEST + COBERTURA (JaCoCo)
+  # Bloquea el pipeline si la cobertura es menor al 60%
+  # ============================================================
+  test:
+    name: Pruebas Unitarias y Cobertura (JaCoCo)
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout del código fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Ejecutar pruebas y verificar cobertura (umbral 60%)
+        run: mvn verify --no-transfer-progress
+
+      - name: Publicar reporte de cobertura JaCoCo
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jacoco-coverage-report
+          path: target/site/jacoco/
+
+      - name: Comentar cobertura en Pull Request
+        uses: madrapps/jacoco-report@v1.6.1
+        if: github.event_name == 'pull_request'
+        with:
+          paths: target/site/jacoco/jacoco.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 60
+          min-coverage-changed-files: 60
+          title: Reporte de Cobertura JaCoCo
+
+  # ============================================================
+  # JOB 3: SCA - Análisis de dependencias (OWASP Dependency Check)
+  # Bloquea si hay CVEs con CVSS >= 9 (críticos)
+  # ============================================================
+  sca:
+    name: Análisis de Dependencias SCA (OWASP)
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout del código fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Cachear base de datos NVD de OWASP
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check-data
+          key: owasp-nvd-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            owasp-nvd-${{ runner.os }}-
+
+      - name: Ejecutar OWASP Dependency Check (bloquea en CVSS >= 9)
+        run: mvn dependency-check:check --no-transfer-progress
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+
+      - name: Publicar reporte OWASP
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: owasp-dependency-check-report
+          path: |
+            target/dependency-check-report.html
+            target/dependency-check-report.json
+
+  # ============================================================
+  # JOB 4: SAST - Análisis estático de código
+  # Usa SonarCloud si está configurado, o CodeQL como alternativa
+  # ============================================================
+  sast:
+    name: Análisis Estático de Código SAST
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout del código fuente (historial completo para SonarCloud)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configurar JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Compilar y generar reporte de cobertura para SAST
+        run: mvn verify --no-transfer-progress
+
+      - name: Análisis SonarCloud (SAST principal)
+        if: ${{ vars.SONAR_ORGANIZATION != '' }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          mvn sonar:sonar \
+            -Dsonar.projectKey=hamburgueseria-pedidos \
+            -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }} \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+            --no-transfer-progress
+
+      - name: Inicializar CodeQL (SAST alternativo sin SonarCloud)
+        if: ${{ vars.SONAR_ORGANIZATION == '' }}
+        uses: github/codeql-action/init@v3
+        with:
+          languages: java
+          queries: security-and-quality
+
+      - name: Compilar para CodeQL
+        if: ${{ vars.SONAR_ORGANIZATION == '' }}
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Ejecutar análisis CodeQL
+        if: ${{ vars.SONAR_ORGANIZATION == '' }}
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:java
+
+  # ============================================================
+  # JOB 5: DOCKER BUILD - Construcción de la imagen Docker
+  # ============================================================
+  docker-build:
+    name: Construcción de Imagen Docker
+    runs-on: ubuntu-latest
+    needs: [test, sca]
+    steps:
+      - name: Checkout del código fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Lint del Dockerfile con Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          failure-threshold: error
+
+      - name: Construir imagen Docker
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: hamburgueseria-pedidos:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          outputs: type=docker,dest=/tmp/docker-image.tar
+
+      - name: Guardar imagen Docker como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp/docker-image.tar
+          retention-days: 1
+
+  # ============================================================
+  # JOB 6: DEPLOY SIMULADO - Despliegue local con Docker Compose
+  # Solo se ejecuta en la rama main
+  # ============================================================
+  deploy:
+    name: Despliegue Simulado (Docker Compose)
+    runs-on: ubuntu-latest
+    needs: [docker-build, sast]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout del código fuente
+        uses: actions/checkout@v4
+
+      - name: Levantar el stack completo con Docker Compose
+        run: |
+          docker compose up --build -d
+          echo "Stack levantado. Esperando que los servicios estén listos..."
+
+      - name: Verificar estado de todos los contenedores
+        run: docker compose ps
+
+      - name: Esperar health check del microservicio (hasta 2 minutos)
+        run: |
+          echo "Esperando que hamburgueseria-pedidos esté saludable..."
+          for i in $(seq 1 12); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/actuator/health 2>/dev/null || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "Microservicio en estado saludable (intento $i)"
+              curl -s http://localhost:8081/actuator/health | python3 -m json.tool
+              break
+            fi
+            echo "Intento $i/12: microservicio no disponible aún (HTTP $STATUS). Esperando 10s..."
+            sleep 10
+          done
+
+      - name: Prueba funcional - Crear pedido de prueba
+        run: |
+          echo "Probando endpoint POST /api/pedidos..."
+          RESPONSE=$(curl -s -X POST http://localhost:8081/api/pedidos \
+            -H "Content-Type: application/json" \
+            -d '{"cliente":"Test CI","hamburguesa":"Clásica","correoCliente":"ci@test.com"}')
+          echo "Respuesta: $RESPONSE"
+
+      - name: Prueba funcional - Listar pedidos
+        run: |
+          echo "Probando endpoint GET /api/pedidos..."
+          curl -s http://localhost:8081/api/pedidos | python3 -m json.tool
+
+      - name: Mostrar logs del microservicio
+        if: always()
+        run: docker compose logs hamburgueseria-pedidos --tail=50
+
+      - name: Apagar el stack
+        if: always()
+        run: docker compose down -v

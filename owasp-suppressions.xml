@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!--
+        Agrega aquí supresiones de CVEs que sean falsos positivos o que no apliquen
+        al contexto de este proyecto.
+
+        Ejemplo:
+        <suppress>
+            <notes>CVE falso positivo para la librería X en este contexto</notes>
+            <cve>CVE-2024-XXXXX</cve>
+        </suppress>
+    -->
+</suppressions>

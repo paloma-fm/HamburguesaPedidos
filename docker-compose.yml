@@ -1,0 +1,124 @@
+services:
+
+  # ============================================================
+  # Microservicio principal: Hamburgueseria Pedidos
+  # ============================================================
+  hamburgueseria-pedidos:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hamburgueseria-pedidos
+    image: hamburgueseria-pedidos:latest
+    ports:
+      - "${SERVER_PORT:-8081}:8081"
+    environment:
+      - SERVER_PORT=8081
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-db_pedidosx}
+      - SPRING_DATASOURCE_USERNAME=${MYSQL_USER:-root}
+      - SPRING_DATASOURCE_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+      - NOTIFICACIONES_URL=http://notificaciones:1080
+    depends_on:
+      mysql:
+        condition: service_healthy
+      notificaciones:
+        condition: service_healthy
+    networks:
+      - hamburgueseria-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # ============================================================
+  # Base de datos MySQL
+  # ============================================================
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-pedidos
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-db_pedidosx}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - hamburgueseria-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=${MYSQL_ROOT_PASSWORD:-root}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # ============================================================
+  # Adminer: interfaz web para administrar la base de datos
+  # ============================================================
+  adminer:
+    image: adminer:4.8.1
+    container_name: adminer
+    ports:
+      - "${ADMINER_PORT:-8090}:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=mysql
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - hamburgueseria-net
+    restart: unless-stopped
+
+  # ============================================================
+  # Mock del microservicio de notificaciones (MockServer)
+  # Simula el microservicio externo hamburgueseria-notificaciones
+  # ============================================================
+  notificaciones:
+    image: mockserver/mockserver:5.15.0
+    container_name: notificaciones-mock
+    ports:
+      - "${NOTIFICACIONES_PORT:-8082}:1080"
+    environment:
+      - MOCKSERVER_WATCH_INITIALIZATION_JSON=true
+      - MOCKSERVER_INITIALIZATION_JSON_PATH=/config/mockserver-config.json
+    volumes:
+      - ./docker/mockserver:/config:ro
+    networks:
+      - hamburgueseria-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:1080/mockserver/status || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+# ============================================================
+# Redes personalizadas
+# ============================================================
+networks:
+  hamburgueseria-net:
+    driver: bridge
+    name: hamburgueseria-network
+
+# ============================================================
+# Volúmenes persistentes
+# ============================================================
+volumes:
+  mysql-data:
+    name: hamburgueseria-mysql-data

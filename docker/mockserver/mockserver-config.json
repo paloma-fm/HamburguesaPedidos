@@ -1,0 +1,15 @@
+[
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/api/notificaciones"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": "{\"mensaje\": \"Notificación enviada correctamente\", \"estado\": \"OK\"}"
+    }
+  }
+]
