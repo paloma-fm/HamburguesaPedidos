@@ -1,8 +1,5 @@
 services:
 
-  # ============================================================
-  # Microservicio principal: Hamburgueseria Pedidos
-  # ============================================================
   hamburgueseria-pedidos:
     build:
       context: .
@@ -21,7 +18,7 @@ services:
       mysql:
         condition: service_healthy
       notificaciones:
-        condition: service_healthy
+        condition: service_started
     networks:
       - hamburgueseria-net
     restart: unless-stopped
@@ -38,9 +35,6 @@ services:
         reservations:
           memory: 256M
 
-  # ============================================================
-  # Base de datos MySQL
-  # ============================================================
   mysql:
     image: mysql:8.0
     container_name: mysql-pedidos
@@ -67,9 +61,6 @@ services:
         reservations:
           memory: 256M
 
-  # ============================================================
-  # Adminer: interfaz web para administrar la base de datos
-  # ============================================================
   adminer:
     image: adminer:4.8.1
     container_name: adminer
@@ -84,10 +75,6 @@ services:
       - hamburgueseria-net
     restart: unless-stopped
 
-  # ============================================================
-  # Mock del microservicio de notificaciones (MockServer)
-  # Simula el microservicio externo hamburgueseria-notificaciones
-  # ============================================================
   notificaciones:
     image: mockserver/mockserver:5.15.0
     container_name: notificaciones-mock
@@ -102,23 +89,17 @@ services:
       - hamburgueseria-net
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:1080/mockserver/status || exit 1"]
+      test: ["CMD-SHELL", "bash -c 'cat < /dev/null > /dev/tcp/localhost/1080' 2>/dev/null && echo OK || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3
       start_period: 20s
 
-# ============================================================
-# Redes personalizadas
-# ============================================================
 networks:
   hamburgueseria-net:
     driver: bridge
     name: hamburgueseria-network
 
-# ============================================================
-# Volúmenes persistentes
-# ============================================================
 volumes:
   mysql-data:
     name: hamburgueseria-mysql-data
