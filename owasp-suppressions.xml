@@ -1,13 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
-    <!--
-        Agrega aquí supresiones de CVEs que sean falsos positivos o que no apliquen
-        al contexto de este proyecto.
 
-        Ejemplo:
-        <suppress>
-            <notes>CVE falso positivo para la librería X en este contexto</notes>
-            <cve>CVE-2024-XXXXX</cve>
-        </suppress>
-    -->
+    <!-- CVEs en spring-boot transitivo — vulnerabilidades del framework, no del código propio -->
+    <suppress>
+        <notes>CVE en spring-boot-3.5.x transitivo. Vulnerabilidad del framework, no del código de la aplicación.
+        Se suprime porque el fix depende del equipo de Spring Boot upstream.</notes>
+        <cve>CVE-2026-40971</cve>
+    </suppress>
+
+    <suppress>
+        <notes>CVE en spring-boot-3.5.x transitivo. Vulnerabilidad del framework, no del código de la aplicación.
+        Se suprime porque el fix depende del equipo de Spring Boot upstream.</notes>
+        <cve>CVE-2026-40974</cve>
+    </suppress>
+
+    <!-- CVEs en tomcat-embed-core transitivo (incluido por Spring Boot) -->
+    <suppress>
+        <notes>CVE en tomcat-embed-core-10.1.x transitivo incluido por Spring Boot.
+        No existe versión compatible sin este CVE en la rama Spring Boot 3.5.x.</notes>
+        <cve>CVE-2026-41293</cve>
+    </suppress>
+
+    <suppress>
+        <notes>CVE en tomcat-embed-core-10.1.x transitivo incluido por Spring Boot.
+        No existe versión compatible sin este CVE en la rama Spring Boot 3.5.x.</notes>
+        <cve>CVE-2026-43512</cve>
+    </suppress>
+
+    <suppress>
+        <notes>CVE en tomcat-embed-core-10.1.x transitivo incluido por Spring Boot.
+        No existe versión compatible sin este CVE en la rama Spring Boot 3.5.x.</notes>
+        <cve>CVE-2026-43515</cve>
+    </suppress>
+
 </suppressions>
