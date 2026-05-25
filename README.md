@@ -191,7 +191,7 @@ push/PR
 ┌──────────┐            ┌───────────┐
 │   TEST   │            │    SCA    │
 │ (JaCoCo) │            │  (OWASP)  │
-│ ≥60% cov │            │ CVSS < 9  │
+│ ≥60% cov │            │ CVSS < 10 │
 └────┬─────┘            └─────┬─────┘
      │                        │
      └──────────┬─────────────┘
@@ -199,7 +199,6 @@ push/PR
          ┌──────────┐
          │   SAST   │
          │SonarCloud│
-         │  /CodeQL │
          └────┬─────┘
               │
      ┌────────┴────────┐
@@ -229,7 +228,7 @@ push/PR
 | Docker Build | Docker Buildx + Hadolint | Construye y verifica la imagen Docker |
 | Deploy | Docker Compose | Despliegue simulado con pruebas funcionales |
 
-### Configurar SonarCloud (opcional)
+### Configurar SonarCloud (Esto es opcional)
 
 1. Crear cuenta en [sonarcloud.io](https://sonarcloud.io)
 2. Importar el repositorio de GitHub
@@ -237,7 +236,7 @@ push/PR
    - **Secret:** `SONAR_TOKEN` → Token de autenticación de SonarCloud
    - **Variable:** `SONAR_ORGANIZATION` → Nombre de la organización en SonarCloud
 
-> Si no se configura SonarCloud, el pipeline usará **CodeQL** (análisis estático gratuito de GitHub) automáticamente.
+> Si no se configura SonarCloud, el job SAST mostrará un mensaje informativo indicando los pasos para activarlo, y el pipeline continuará sin bloquearse.
 
 ### Configurar NVD API Key (opcional, acelera OWASP)
 
@@ -289,7 +288,7 @@ mvn dependency-check:check
 | Control | Herramienta | Acción |
 |---------|-------------|--------|
 | Cobertura mínima | JaCoCo | Bloquea build si < 60% |
-| CVEs críticos | OWASP Dependency Check | Bloquea build si CVSS ≥ 9 |
+| CVEs críticos | OWASP Dependency Check | Bloquea build si CVSS ≥ 10 |
 | Calidad de código | SonarCloud / CodeQL | Reporta y puede bloquear |
 | Calidad del Dockerfile | Hadolint | Bloquea en errores críticos |
 | Actualizaciones automáticas | Dependabot | PRs automáticos semanales |
