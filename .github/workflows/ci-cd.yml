@@ -37,7 +37,7 @@ jobs:
         run: mvn clean package -DskipTests --no-transfer-progress
 
       - name: Guardar artefacto JAR
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: jar-artifact
           path: target/*.jar
@@ -66,7 +66,7 @@ jobs:
         run: mvn verify --no-transfer-progress
 
       - name: Publicar reporte de cobertura JaCoCo
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: jacoco-coverage-report
@@ -116,7 +116,7 @@ jobs:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
 
       - name: Publicar reporte OWASP
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: owasp-dependency-check-report
@@ -199,7 +199,7 @@ jobs:
           outputs: type=docker,dest=/tmp/docker-image.tar
 
       - name: Guardar imagen Docker como artefacto
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: docker-image
           path: /tmp/docker-image.tar
