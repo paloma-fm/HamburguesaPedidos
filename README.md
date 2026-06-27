@@ -418,7 +418,17 @@ Tal como indicó el docente por correo, **no se usa Kubernetes** (contenido no c
 
 > Instancia activa en AWS Academy Learner Lab (EC2, Ubuntu, us-east-1). Verificado el 27-06-2026 respondiendo HTTP 200 en Grafana, Prometheus y la API.
 
-> **Captura sugerida:** consola de AWS Academy mostrando la instancia EC2 "running", y el Security Group con los puertos abiertos.
+**Evidencia:** instancia EC2 activa en AWS Academy:
+
+![Instancia EC2 en ejecución](docs/screenshots/aws-ec2-instance.png)
+
+Dashboard de Grafana accedido desde la IP pública de la instancia (no localhost):
+
+![Grafana en AWS](docs/screenshots/aws-grafana2.png)
+
+Prometheus Targets accedido desde la IP pública:
+
+![Prometheus Targets en AWS](docs/screenshots/aws-prometheus-targets.png)
 
 ---
 
