@@ -430,6 +430,10 @@ Prometheus Targets accedido desde la IP pública:
 
 ![Prometheus Targets en AWS](docs/screenshots/aws-prometheus-targets.png)
 
+Security Group con los puertos necesarios abiertos:
+
+![Security Group](docs/screenshots/aws-security-group.png)
+
 ---
 
 ## Dashboard de métricas clave (IE3)
