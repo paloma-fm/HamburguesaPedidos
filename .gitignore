@@ -35,3 +35,7 @@ build/
 ### Variables de entorno sensibles (NO subir a git) ###
 .env
 
+### Llaves SSH / credenciales (NO subir a git) ###
+*.pem
+*.ppk
+
