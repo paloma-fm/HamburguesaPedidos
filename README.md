@@ -411,9 +411,12 @@ Tal como indicó el docente por correo, **no se usa Kubernetes** (contenido no c
 > **Nota sobre disponibilidad:** AWS Academy Learner Lab tiene presupuesto y duración acotados por módulo del curso. Se deja la instancia corriendo para que el docente pueda ingresar directamente durante la semana de revisión; como respaldo, esta sección y la de Observabilidad incluyen capturas de pantalla del mismo stack funcionando, por si el laboratorio se reinicia antes de la revisión.
 
 **Acceso para el docente (completar antes de enviar el correo/AVA):**
-- URL Grafana: `http://___________:3001` (acceso anónimo, rol Viewer — no requiere login)
-- URL Prometheus: `http://___________:9090`
-- URL API: `http://___________:8081/api/pedidos`
+- URL Grafana: `http://54.243.20.119:3001` (acceso anónimo, rol Viewer — no requiere login)
+- URL Prometheus: `http://54.243.20.119:9090`
+- URL API: `http://54.243.20.119:8081/api/pedidos`
+- URL Adminer: `http://54.243.20.119:8090`
+
+> Instancia activa en AWS Academy Learner Lab (EC2, Ubuntu, us-east-1). Verificado el 27-06-2026 respondiendo HTTP 200 en Grafana, Prometheus y la API.
 
 > **Captura sugerida:** consola de AWS Academy mostrando la instancia EC2 "running", y el Security Group con los puertos abiertos.
 
