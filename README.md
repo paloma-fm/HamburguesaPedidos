@@ -498,10 +498,11 @@ Se combinan tres mecanismos de cumplimiento, tal como sugiere la pauta:
 Por solicitud del profesor, se debe otorgar acceso público o invitar a los siguientes usuarios:
 
 - **SonarCloud:** invitar a `nico@singh.cl` (Nico Singh) como miembro de la organización, o dejar el proyecto en modo público.
-- **Snyk:** invitar a `nico@singh.cl` (Nico Singh) como colaborador de la organización/proyecto en snyk.io.
 - **GitHub:** invitar a `nicosingh` (nico@singh.cl) como colaborador del repositorio si se mantiene privado.
 
-> **Captura sugerida:** pantalla de SonarCloud con el proyecto analizado (quality gate) y pantalla de Snyk con el reporte de vulnerabilidades del proyecto.
+> **Nota sobre Snyk:** el job `snyk` queda preparado en el pipeline (`.github/workflows/ci-cd.yml`) listo para activarse agregando el secret `SNYK_TOKEN`, pero no se configuró una cuenta para esta entrega: IE5 ya queda cubierto con SonarCloud, branch protection rules y OWASP Dependency Check (este último además es el gate real de IE6). Si no se activa, el job solo imprime un mensaje informativo y no afecta el resto del pipeline.
+
+> **Captura sugerida:** pantalla de SonarCloud con el proyecto analizado (quality gate).
 
 ---
 
