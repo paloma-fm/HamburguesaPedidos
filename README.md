@@ -380,7 +380,9 @@ docker compose ps
 - Grafana: http://localhost:3001 (acceso anónimo en modo *Viewer* habilitado; usuario admin: `admin` / contraseña en `.env`)
 - Métricas crudas del microservicio: http://localhost:8081/actuator/prometheus
 
-> **Captura sugerida:** pega aquí una captura de Prometheus → Targets (mostrando `UP`) y otra del dashboard de Grafana con datos reales (generar tráfico antes con `curl` al endpoint `/api/pedidos` para que se vean métricas distintas de cero).
+**Evidencia:** Prometheus detecta los 3 targets (microservicio, prometheus, pushgateway) en estado `UP`:
+
+![Prometheus Targets](docs/screenshots/targets.png)
 
 ---
 
@@ -453,7 +455,13 @@ mvn verify
 # http://localhost:3001
 ```
 
-> **Captura sugerida:** dashboard completo de Grafana con los 9 paneles mostrando datos (no en cero).
+**Evidencia:** dashboard completo con datos reales generados por tráfico de prueba (disponibilidad, cobertura, duración de build, requests, memoria, CPU):
+
+![Dashboard - vista general](docs/screenshots/overview.png)
+
+Errores HTTP, latencia p95 y logs en vivo del microservicio (vía Loki):
+
+![Dashboard - errores, latencia y logs](docs/screenshots/grafana-dashboard-logs.png)
 
 ---
 
