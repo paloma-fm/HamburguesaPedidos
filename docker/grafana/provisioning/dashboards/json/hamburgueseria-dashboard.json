@@ -1,0 +1,103 @@
+{
+  "title": "Hamburgueseria Pedidos - Observabilidad",
+  "uid": "hamburgueseria-obs",
+  "schemaVersion": 39,
+  "version": 1,
+  "timezone": "browser",
+  "refresh": "10s",
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Disponibilidad del microservicio",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus-ds" },
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "up{job=\"hamburgueseria-pedidos\"}", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Cobertura de pruebas (CI/CD)",
+      "type": "gauge",
+      "datasource": { "type": "prometheus", "uid": "prometheus-ds" },
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "pipeline_test_coverage_percent", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "orange", "value": 60 }, { "color": "green", "value": 80 }] }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Duración del último build/test",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus-ds" },
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "pipeline_build_duration_seconds", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+    {
+      "id": 4,
+      "title": "Total de requests HTTP",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus-ds" },
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "sum(http_server_requests_seconds_count{job=\"hamburgueseria-pedidos\"})", "refId": "A" }]
+    },
+    {
+      "id": 5,
+      "title": "Uso de memoria JVM (heap)",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus-ds" },
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "targets": [{ "expr": "jvm_memory_used_bytes{job=\"hamburgueseria-pedidos\", area=\"heap\"}", "legendFormat": "{{id}}", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "bytes" } }
+    },
+    {
+      "id": 6,
+      "title": "Uso de CPU del proceso",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus-ds" },
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "targets": [{ "expr": "process_cpu_usage{job=\"hamburgueseria-pedidos\"}", "legendFormat": "CPU", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1 } }
+    },
+    {
+      "id": 7,
+      "title": "Errores HTTP por código de estado",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus-ds" },
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "targets": [{ "expr": "sum by (status) (rate(http_server_requests_seconds_count{job=\"hamburgueseria-pedidos\"}[1m]))", "legendFormat": "{{status}}", "refId": "A" }]
+    },
+    {
+      "id": 8,
+      "title": "Latencia p95 de requests",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus-ds" },
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "targets": [{ "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=\"hamburgueseria-pedidos\"}[5m])) by (le))", "legendFormat": "p95", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+    {
+      "id": 9,
+      "title": "Logs del microservicio",
+      "type": "logs",
+      "datasource": { "type": "loki", "uid": "loki-ds" },
+      "gridPos": { "x": 0, "y": 20, "w": 24, "h": 8 },
+      "targets": [{ "expr": "{container=\"hamburgueseria-pedidos\"}", "refId": "A" }]
+    }
+  ]
+}

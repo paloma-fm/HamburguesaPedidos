@@ -49,6 +49,10 @@
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
 			<scope>runtime</scope>
@@ -170,7 +174,7 @@
 				<artifactId>dependency-check-maven</artifactId>
 				<version>${dependency-check.version}</version>
 				<configuration>
-					<failBuildOnCVSS>10</failBuildOnCVSS>
+					<failBuildOnCVSS>9</failBuildOnCVSS>
 					<formats>
 						<format>HTML</format>
 						<format>JSON</format>
