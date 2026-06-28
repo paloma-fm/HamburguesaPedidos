@@ -1,6 +1,6 @@
 # Hamburgueseria Pedidos - Microservicio
 
-Microservicio REST para la gestión de pedidos de una hamburguesería. Desarrollado con **Spring Boot 3.5** y **Java 21**, con pipeline CI/CD completo implementado en **GitHub Actions**, orquestación de contenedores mediante **Docker Compose**, y una capa de **observabilidad, métricas y cumplimiento normativo** (Evaluación Parcial 3) con Prometheus, Grafana, Loki y Snyk.
+Microservicio REST para la gestión de pedidos de una hamburguesería. Desarrollado con **Spring Boot 3.5** y **Java 21**, con pipeline CI/CD completo implementado en **GitHub Actions**, orquestación de contenedores mediante **Docker Compose**, y una capa de **observabilidad, métricas y cumplimiento normativo** (Evaluación Parcial 3) con Prometheus, Grafana, Loki, SonarCloud y OWASP Dependency Check.
 
 ---
 
@@ -18,9 +18,10 @@ Microservicio REST para la gestión de pedidos de una hamburguesería. Desarroll
 10. [Observabilidad y Monitoreo (IE1)](#observabilidad-y-monitoreo-ie1)
 11. [Despliegue en la nube - AWS (IE2)](#despliegue-en-la-nube---aws-ie2)
 12. [Dashboard de métricas clave (IE3)](#dashboard-de-métricas-clave-ie3)
-13. [Cumplimiento y Auditoría Automatizada (IE5)](#cumplimiento-y-auditoría-automatizada-ie5)
-14. [Evidencia: el pipeline se detiene ante fallas críticas (IE6)](#evidencia-el-pipeline-se-detiene-ante-fallas-críticas-ie6)
-15. [Declaración de uso de Inteligencia Artificial](#declaración-de-uso-de-inteligencia-artificial)
+13. [Documentación de integración y toma de decisiones (IE4)](#documentación-de-integración-y-toma-de-decisiones-ie4)
+14. [Cumplimiento y Auditoría Automatizada (IE5)](#cumplimiento-y-auditoría-automatizada-ie5)
+15. [Evidencia: el pipeline se detiene ante fallas críticas (IE6)](#evidencia-el-pipeline-se-detiene-ante-fallas-críticas-ie6)
+16. [Declaración de uso de Inteligencia Artificial](#declaración-de-uso-de-inteligencia-artificial)
 
 ---
 
@@ -316,7 +317,7 @@ mvn dependency-check:check
 |---------|-------------|--------|
 | Cobertura mínima | JaCoCo | Bloquea build si < 60% |
 | CVEs críticos | OWASP Dependency Check | **Bloquea Docker Build y Deploy si CVSS ≥ 9** |
-| Cumplimiento adicional | Snyk | Reporta vulnerabilidades (segunda fuente de datos) |
+| Cumplimiento adicional (preparado, no activo) | Snyk | Job listo en el pipeline; requiere `SNYK_TOKEN` para activarse |
 | Calidad de código | SonarCloud | Reporta calidad y code smells |
 | Calidad del Dockerfile | Hadolint | Bloquea en errores críticos |
 | Actualizaciones automáticas | Dependabot | PRs automáticos semanales |
@@ -438,7 +439,7 @@ Security Group con los puertos necesarios abiertos:
 
 ## Dashboard de métricas clave (IE3)
 
-El dashboard "Hamburgueseria Pedidos - Observabilidad" se auto-provisiona en Grafana (`docker/grafana/dashboards/hamburgueseria-dashboard.json`) e incluye exactamente las métricas pedidas por la pauta:
+El dashboard "Hamburgueseria Pedidos - Observabilidad" se auto-provisiona en Grafana (`docker/grafana/provisioning/dashboards/json/hamburgueseria-dashboard.json`) e incluye exactamente las métricas pedidas por la pauta:
 
 | Métrica exigida | Panel en Grafana | Origen del dato |
 |---|---|---|
@@ -482,16 +483,37 @@ Errores HTTP, latencia p95 y logs en vivo del microservicio (vía Loki):
 
 ---
 
+## Documentación de integración y toma de decisiones (IE4)
+
+Cómo cada herramienta se integra en el pipeline CI/CD y qué decisión técnica permite tomar:
+
+| Herramienta | Dónde vive en el pipeline | Qué información entrega | Decisión que habilita |
+|---|---|---|---|
+| **JaCoCo** | Job `test`, fase `verify` de Maven | % de cobertura de líneas | Si cae bajo 60%, el build falla automáticamente: el equipo sabe que no puede mergear sin agregar pruebas |
+| **OWASP Dependency Check** | Job `sca` | Lista de CVEs con su score CVSS por dependencia | Si hay CVSS ≥ 9, el pipeline bloquea Docker Build y Deploy: evita llevar a producción una vulnerabilidad crítica conocida (ver IE6) |
+| **SonarCloud** | Job `sast` | Code smells, duplicación, bugs potenciales, cobertura combinada con JaCoCo | Permite decidir si el código necesita refactor antes de seguir agregando features, sin bloquear el pipeline (es informativo) |
+| **Hadolint** | Job `docker-build` | Errores de buenas prácticas en el `Dockerfile` | Si hay errores críticos, el build de la imagen falla: evita publicar imágenes Docker mal configuradas |
+| **Prometheus + Grafana** | Servicios del `docker-compose.yml`, fuera del pipeline (observabilidad en runtime) | CPU, memoria, latencia p95, tasa de errores HTTP, disponibilidad en tiempo real | Permite decidir si el sistema necesita más recursos, si hay una regresión de performance, o si el servicio está caído, sin tener que revisar logs manualmente |
+| **Loki + Promtail** | Igual que Grafana, agregador de logs | Logs centralizados de los 9 contenedores en un solo lugar | Acelera el diagnóstico de incidentes: no hay que entrar contenedor por contenedor con `docker logs` |
+| **Pushgateway + `push-pipeline-metrics.sh`** | Job `test` (paso opcional) | Cobertura y duración del build, históricas en Grafana | Permite ver tendencias del pipeline mismo (¿se está demorando más? ¿bajó la cobertura con el tiempo?) en lugar de mirar un solo run aislado |
+| **Dependabot** | Fuera del pipeline, corre semanalmente | PRs automáticos con versiones nuevas de dependencias | Mantiene las dependencias al día sin trabajo manual, reduciendo la ventana de exposición a CVEs nuevos |
+| **Branch protection rules** | GitHub, a nivel de repositorio | Exige que el pipeline corra y pase antes de habilitar el merge | Evita que alguien mergee código a `main` sin pasar por todos los controles anteriores |
+
+En conjunto, estas herramientas separan dos tipos de señal: las que **bloquean automáticamente** (JaCoCo, OWASP, Hadolint, branch protection) protegen contra regresiones de calidad/seguridad sin depender de que alguien se acuerde de revisar manualmente; las que son **informativas** (SonarCloud, Prometheus/Grafana, Snyk si se activa) dan visibilidad para que el equipo tome decisiones de mediano plazo (refactors, escalamiento, prioridad de fixes) sin frenar cada entrega.
+
+---
+
 ## Cumplimiento y Auditoría Automatizada (IE5)
 
-Se combinan tres mecanismos de cumplimiento, tal como sugiere la pauta:
+Se combinan tres mecanismos de cumplimiento activos, tal como sugiere la pauta:
 
 | Herramienta | Qué audita | Dónde se ejecuta |
 |---|---|---|
 | **SonarCloud** | Calidad de código, code smells, duplicación, cobertura | Job `sast` en cada push/PR |
-| **Snyk** | Vulnerabilidades de dependencias (segunda fuente, complementa a OWASP) | Job `snyk` en cada push/PR |
 | **Branch protection rules (GitHub)** | Impide mergear a `main` sin que el pipeline corra; exige PR revisado | Configurado en GitHub → Settings → Rules |
 | **OWASP Dependency Check** | CVEs críticos en dependencias; es el gate que efectivamente detiene el pipeline (ver IE6) | Job `sca` |
+
+Un cuarto mecanismo (**Snyk**) quedó preparado en el pipeline como job `snyk`, pero no se activó para esta entrega (ver nota más abajo).
 
 ### Acceso para el docente
 
