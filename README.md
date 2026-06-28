@@ -517,10 +517,10 @@ Un cuarto mecanismo (**Snyk**) quedó preparado en el pipeline como job `snyk`, 
 
 ### Acceso para el docente
 
-Por solicitud del profesor, se debe otorgar acceso público o invitar a los siguientes usuarios:
+Por solicitud del profesor, se otorga acceso público (preferido por el correo del docente sobre invitar usuarios individuales):
 
-- **SonarCloud:** invitar a `nico@singh.cl` (Nico Singh) como miembro de la organización, o dejar el proyecto en modo público.
-- **GitHub:** invitar a `nicosingh` (nico@singh.cl) como colaborador del repositorio si se mantiene privado.
+- **SonarCloud:** https://sonarcloud.io/summary/overall?id=paloma-fm_HamburguesaPedidos&branch=main — proyecto público, no requiere cuenta ni invitación.
+- **GitHub:** repositorio público desde la Evaluación 2.
 
 > **Nota sobre Snyk:** el job `snyk` queda preparado en el pipeline (`.github/workflows/ci-cd.yml`) listo para activarse agregando el secret `SNYK_TOKEN`, pero no se configuró una cuenta para esta entrega: IE5 ya queda cubierto con SonarCloud, branch protection rules y OWASP Dependency Check (este último además es el gate real de IE6). Si no se activa, el job solo imprime un mensaje informativo y no afecta el resto del pipeline.
 
