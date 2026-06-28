@@ -94,3 +94,4 @@ class PedidoControllerTest {
                 .andExpect(jsonPath("$.correoCliente").value("carlos@test.com"));
     }
 }
+

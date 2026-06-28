@@ -1,36 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
-
-    <!-- CVEs en spring-boot transitivo — vulnerabilidades del framework, no del código propio -->
-    <suppress>
-        <notes>CVE en spring-boot-3.5.x transitivo. Vulnerabilidad del framework, no del código de la aplicación.
-        Se suprime porque el fix depende del equipo de Spring Boot upstream.</notes>
-        <cve>CVE-2026-40971</cve>
-    </suppress>
-
-    <suppress>
-        <notes>CVE en spring-boot-3.5.x transitivo. Vulnerabilidad del framework, no del código de la aplicación.
-        Se suprime porque el fix depende del equipo de Spring Boot upstream.</notes>
-        <cve>CVE-2026-40974</cve>
-    </suppress>
-
-    <!-- CVEs en tomcat-embed-core transitivo (incluido por Spring Boot) -->
-    <suppress>
-        <notes>CVE en tomcat-embed-core-10.1.x transitivo incluido por Spring Boot.
-        No existe versión compatible sin este CVE en la rama Spring Boot 3.5.x.</notes>
-        <cve>CVE-2026-41293</cve>
-    </suppress>
-
-    <suppress>
-        <notes>CVE en tomcat-embed-core-10.1.x transitivo incluido por Spring Boot.
-        No existe versión compatible sin este CVE en la rama Spring Boot 3.5.x.</notes>
-        <cve>CVE-2026-43512</cve>
-    </suppress>
-
-    <suppress>
-        <notes>CVE en tomcat-embed-core-10.1.x transitivo incluido por Spring Boot.
-        No existe versión compatible sin este CVE en la rama Spring Boot 3.5.x.</notes>
-        <cve>CVE-2026-43515</cve>
-    </suppress>
-
+    <!--
+        En esta rama (Evaluación Parcial 3) se mantiene este archivo sin supresiones
+        a propósito: el job SCA debe bloquear el pipeline ante CVEs reales con CVSS >= 9
+        como evidencia de IE6 (validación que detiene el pipeline ante fallas críticas).
+        Ver sección "Evidencia IE6" en README.md.
+    -->
 </suppressions>
