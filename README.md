@@ -526,7 +526,13 @@ Adicionalmente, el job `test` aplica el mismo principio para la **calidad**: si 
 | Cobertura de pruebas < 60% | `mvn verify` (JaCoCo check, fase `verify`) | Sí |
 | Dockerfile con errores críticos de lint | Hadolint en job `docker-build` | Sí |
 
-> **Captura sugerida:** ejecución de GitHub Actions de esta rama mostrando el job `sca` en rojo y los jobs `docker-build`/`deploy` en gris/omitidos ("skipped"). Incluir también el log del job `sca` con el CVE específico que provocó la falla.
+**Evidencia:** ejecución real del pipeline (PR #13) — `sca` falla en rojo y `docker-build`/`deploy` quedan omitidos ("skipped"):
+
+![Pipeline bloqueado por SCA](docs/screenshots/pipeline-bloqueado.png)
+
+Log del job `sca` mostrando los CVEs reales que provocaron el bloqueo:
+
+![Log de OWASP con CVEs](docs/screenshots/owasp-log.png)
 
 Para comprobarlo en tu propia ejecución: ve a la pestaña **Actions** del repositorio, abre el run más reciente de esta rama y observa que `docker-build` y `deploy` aparecen como *Skipped*, no como *Success*.
 
