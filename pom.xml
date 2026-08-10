@@ -29,7 +29,7 @@
 	<properties>
 		<java.version>17</java.version>
 		<jacoco.version>0.8.12</jacoco.version>
-		<dependency-check.version>10.0.4</dependency-check.version>
+		<dependency-check.version>13.0.0</dependency-check.version>
 		<sonar.maven.plugin.version>4.0.0.4121</sonar.maven.plugin.version>
 		<sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
 		<sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
